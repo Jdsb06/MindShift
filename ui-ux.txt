@@ -1,0 +1,99 @@
+Of course. Designing the app is where its soul and "vibe" truly come to life. Based on our entire conversation, here is a detailed design prompt, written as a brief for a developer or designer. This will guide you in creating an interface that is not only functional but also deeply resonant with the target user.
+
+---
+
+## ## Design Prompt: Project MindShift
+
+**Project:** MindShift - An intentionality app for Generation Z.
+**Motto:** Trade mindless scrolling for meaningful progress.
+
+### ### 1. The Core Philosophy (The "Why")
+
+Before any pixel is placed, understand the feeling we need to evoke. This app is an **antidote to anxiety**, not another tool for pressure.
+
+* **It is a Supportive Ally, NOT a Drill Sergeant:** The design must feel encouraging, gentle, and private. It celebrates progress, no matter how small, and never highlights failure or inactivity.
+* **It is a Sanctuary, NOT a Stage:** The user experience should feel like a calm, personal journal. It’s a private space to reflect and build confidence, not a platform for performance.
+* **It is about Feeling Good, NOT about Doing More:** The ultimate goal of the design is to make the user feel better about the work they are *already* doing. The entire UX/UI should be optimized to reduce stress and provide a sense of control and accomplishment.
+
+### ### 2. The Target User (The "Who")
+
+Our user is "Alex," an 18-25 year old.
+* **Ambitious:** They have high career and personal goals.
+* **Anxious:** They are acutely aware of burnout and mental health, feeling the pressure of a hyper-connected, unstable world.
+* **Skeptical:** They have a finely tuned "cringe" detector and are skeptical of corporate "productivity hacks."
+* **Coping Mechanism:** They use mindless scrolling as a low-effort way to numb stress but feel guilty about it afterwards.
+
+**Alex needs a tool that validates their ambition while protecting their well-being.**
+
+---
+
+### ### 3. The User Experience (UX) Design
+
+The flow and feel of the app must be frictionless and calming.
+
+#### **Onboarding & First Impression:**
+* **Frictionless Entry:** The signup/login process must be incredibly simple. A prominent "Sign in with Google" button is essential. The journey from landing on the page to seeing the dashboard for the first time should take seconds.
+* **No Empty States of Shame:** When a new user lands on the dashboard, it shouldn't feel empty. The Compass should have placeholder text prompting them to define their "why," and the Momentum Log should have an encouraging message like "What's one small thing you've accomplished today?"
+
+#### **The Core Interaction Loop (The Heart of the UX):**
+This loop must be effortless and rewarding.
+1.  **Open App:** The user immediately sees their "Compass" (their long-term goals) and their "Momentum Log" (their recent accomplishments). This instantly grounds them in their purpose and progress.
+2.  **Add Momentum:** The input field to add a new accomplishment must be the most prominent interactive element on the screen. It should be inviting, not demanding.
+3.  **Instant Feedback:** Upon submitting, the new entry should appear in the log instantly and smoothly (e.g., with a subtle fade-in animation). This provides immediate positive reinforcement.
+
+#### **Interaction Design:**
+* **Micro-interactions are Key:** Every click and tap should have a purpose and feel good. Buttons should have a subtle press effect. Modals should slide in smoothly. These small details make the app feel premium and non-jarring.
+* **Haptic & Auditory Feedback (Future):** While not for the initial build, consider subtle haptic feedback on mobile when a task is added, or a gentle, satisfying sound effect.
+
+---
+
+### ### 4. The User Interface (UI) Style Guide
+
+This is the "Minimalist Maximalism" vibe check. The foundation is clean and minimal, while the personality is expressive and customizable.
+
+#### **Color Palette:**
+* **Primary Background:** A very dark, soft charcoal grey, not pure black (e.g., `bg-gray-900` or `#121212`). This is less fatiguing on the eyes.
+* **Secondary Background:** A slightly lighter grey for cards, inputs, and modals to create a subtle depth (e.g., `bg-gray-800` or `#1E1E1E`).
+* **Primary Text:** An off-white, soft text color (e.g., `text-gray-200` or `#E0E0E0`). Avoid pure white (`#FFFFFF`) for body text.
+* **Accent Color (The "Maximalist" part):** A single, vibrant, energetic color for all interactive elements (buttons, links, highlights). **Indigo** (`#6366F1`) is a great starting point. The goal is to later allow the user to choose their own accent color from a curated palette.
+
+#### **Typography:**
+* **Font:** A clean, modern, and highly readable sans-serif font. **Inter** or **Poppins** (available on Google Fonts) are perfect choices.
+* **Hierarchy:** Use only font size and weight to create structure.
+    * **Headings:** `font-bold`, larger text size.
+    * **Body Text:** `font-normal`, base text size.
+    * **Labels/Subtle Text:** `font-light` or a lighter text color (`text-gray-400`).
+
+#### **Layout & Spacing:**
+* **Generous Whitespace:** This is non-negotiable. Use padding and margins liberally to give every element room to breathe. This reduces cognitive load and creates a feeling of calm and focus.
+* **Clean Lines & Rounded Corners:** Use consistent, soft rounded corners (`rounded-lg`) for cards, buttons, and inputs to create a friendly and modern feel.
+
+---
+
+### ### 5. Key Screen Breakdown
+
+#### **A. Login / Signup Page**
+* **Layout:** Single column, centered vertically and horizontally.
+* **Components:**
+    * Simple text logo: "MindShift".
+    * Clear Heading: "Join" or "Welcome Back".
+    * Two input fields (Email, Password).
+    * Primary action button (e.g., "Create Account").
+    * Subtle "Or" divider.
+    * A prominent "Sign in with Google" button. This should be visually prioritized.
+
+#### **B. The Dashboard (Main Screen)**
+This is the user's sanctuary. It should be clean and empowering.
+* **Layout:** A simple, intuitive grid. On desktop, perhaps a two-column layout. On mobile, a single responsive column.
+* **Components:**
+    * **Header:** Simple, with the app name/logo and a "Logout" button.
+    * **The Compass Card:** Displays the user's 3 main goals. Must have a subtle "edit" icon.
+    * **Momentum Input:** A beautifully styled, prominent text input field with a clear "Add" button. Placeholder text should be encouraging, like "What's a win from today?"
+    * **Momentum Log:** A scrollable list of past entries. Each entry should clearly show the text and a relative timestamp (e.g., "5m ago," "yesterday"). A subtle "delete" icon should appear on hover.
+    * **Triggers:**
+        * **Attention Swap:** A distinct, easily accessible button, perhaps a Floating Action Button (FAB) in the corner with an icon (`🧘‍♂️`).
+        * **AI Summary:** A less prominent button near the Momentum Log, like `✨ Generate My Vibe`.
+
+#### **C. Modals (for AI Summary, Edit Compass, Attention Swap)**
+* **Behavior:** Must appear with a smooth, non-jarring animation (e.g., fade-in and scale up, or slide up from the bottom).
+* **Design:** They should overlay the main content, which is dimmed by a semi-transparent backdrop. This focuses the user's attention. Must have a clear "close" (X) icon.

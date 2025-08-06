@@ -1,15 +1,30 @@
 {
-  "name": "backend",
+  "name": "mindshift-backend",
   "version": "1.0.0",
+  "description": "MindShift Firebase Backend with Cloud Functions",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "node test-functions.js",
+    "lint": "echo 'Linting disabled for prototype'",
+    "build": "echo 'Build completed'"
   },
-  "keywords": [],
+  "keywords": ["mindshift", "firebase", "cloud-functions"],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^4.8.0",
+    "@google/generative-ai": "^0.21.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.4.0"
+  },
+  "engines": {
+    "node": "18"
   }
 }
