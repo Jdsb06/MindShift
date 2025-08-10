@@ -1,108 +1,212 @@
-# Project MindShift: Dev README
+# MindShift
 
-**Motto:** Trade mindless scrolling for meaningful progress.
+Trade mindless scrolling for meaningful progress.
 
-This document is a technical blueprint for developers working on the MindShift app. It outlines the required functionality for each feature and the specific "vibe" the frontend needs to embody.
+A modern, Gen Z–friendly productivity app that helps you build momentum through intentional actions, effortless logging, and a little AI magic.
 
------
+<p align="center">
+  <img src="frontend/public/logo.svg" alt="MindShift Logo" width="80" />
+</p>
 
-## \#\# Tech Stack 🛠️
+<p align="center">
+  <a href="https://nodejs.org/en">Node 18</a> · <a href="https://react.dev/">React + Vite</a> · <a href="https://firebase.google.com/">Firebase (Auth, Firestore, Functions)</a> · <a href="https://ai.google.dev/">Gemini</a>
+</p>
 
-* **Frontend:** React (Vite), Tailwind CSS, React Router
-* **Backend & Database:** Firebase (Auth, Firestore, Cloud Functions)
-* **AI:** OpenAI API
+## Overview
 
------
+MindShift connects the dots between your daily actions and your deeper “why.”
+- Attention Swap: a fast pattern-interrupt to reset focus
+- Momentum Log: a shame-free done list with real-time updates
+- Compass Goals: keep your top 3 goals front-and-center
+- AI Magic: personalized reflections and weekly insights via Gemini
+- Optional Notion integration for events/tasks
 
-## \#\# Core Pillars & Required Functionality
+## Why MindShift (the motive)
 
-This is the feature breakdown. Each function must be implemented to fulfill the core user promises.
+The world is optimized for distraction. Endless feeds reward mindless consumption over meaningful creation. Traditional productivity tools often amplify guilt and overwhelm. MindShift flips that script.
 
-### \#\#\# Pillar 1: The Compass 🧭
+- The problem
+  - We lose hours to low-intent scrolling and feel worse, not better.
+  - To-do lists become anxiety lists; we forget to celebrate what we did.
+  - Goals drift to the background and rarely shape daily choices.
 
-**Purpose:** Connect the user's daily actions to their long-term "why."
+- Our approach
+  - Pattern interrupt, not shame: a one-tap Attention Swap to reset your state.
+  - Momentum over perfection: log small wins; watch confidence compound.
+  - Compass-first decisions: keep your 3 core goals always visible.
+  - Gentle AI coaching: short, human-friendly reflections—never prescriptive.
 
-* **`[ ]` Data Model:** The `users` document in Firestore must have a `compassGoals` map field (`goal1`, `goal2`, `goal3`).
-* **`[ ]` Display Goals:** On the main dashboard, fetch and display the user's three compass goals. They should be prominently visible.
-* **`[ ]` Update Goals:** Implement a modal or form where a user can edit and save their three goals. This should call a Firestore `updateDoc` function.
+- Who it’s for
+  - Students, makers, indie hackers, and anyone who wants intentional days.
+  - People who prefer calm, fast, delightful tools without bloat.
 
-### \#\#\# Pillar 2: The Attention Swap 🧘
+- Design principles
+  - Minimalist core, maximalist personality: clean structure with tasteful flair.
+  - Dark-mode first with curated accents; micro-animations for flow.
+  - Shame-free language; clarity over jargon; speed over ceremony.
 
-**Purpose:** Provide an immediate, healthy alternative to mindless scrolling. This is an *in-app* feature.
+## Monorepo structure
 
-* **`[ ]` Trigger Component:** Create a button or a persistent element on the dashboard with a prompt like "Feeling Distracted?" or "Reset Focus."
-* **`[ ]` Modal Overlay:** On click, this trigger must launch a full-screen modal overlay.
-* **`[ ]` Mindful Action:** The modal will display a simple, non-interactive "mindful action." Start with a guided breathing exercise text (e.g., "Breathe in for 4s, hold for 4s, out for 6s") accompanied by a simple visual timer or animation. The goal is a 1-2 minute pattern interrupt.
+- `frontend/` — React 19 (Vite), Tailwind
+- `backend/` — Firebase Cloud Functions (Node 18), Gemini, Notion client
+- `firebase.json` — Hosting, functions, and emulator config
+- `firestore.rules`, `firestore.indexes.json` — DB security + indexes
+- `docs/` — Additional run and deployment docs
 
-### \#\#\# Pillar 3: The Momentum Log ✅
+## Tech stack
 
-**Purpose:** Build confidence and reduce anxiety by focusing on a "Done" list instead of a "To-Do" list. This is the core interactive feature.
+- Frontend: React (Vite), Tailwind CSS, React Router
+- Backend: Firebase (Auth, Firestore, Cloud Functions)
+- AI: Gemini (Google Generative AI)
 
-* **`[ ]` Data Model:** Create a sub-collection `momentumLogs` under each `users/{userId}` document. Each log document should contain `text` (string) and `createdAt` (timestamp).
-* **`[ ]` Create Log:** The main dashboard must have a simple input field and an "Add" button to create a new momentum log. This function calls `addDoc` to the user's `momentumLogs` sub-collection.
-* **`[ ]` Read Logs:** Display the user's momentum logs in a list on the dashboard, sorted with the most recent first. This must use a real-time listener (`onSnapshot`) so the list updates instantly when a new log is added.
-* **`[ ]` Delete Log:** Each log entry in the list must have a delete button. This function calls `deleteDoc` on the specific log document.
+## Quick start
 
-### \#\#\# AI "Magic" ✨
+Prefer the full step-by-step? See `GETTING_STARTED.md`.
 
-**Purpose:** Provide delightful, personalized insights without being prescriptive.
+```bash
+# From the repo root
+npm --prefix frontend install
+npm --prefix backend install
 
-* **`[ ]` Firebase Cloud Function:** Create an HTTPS Callable Cloud Function named `generateMomentumSummary`.
-* **`[ ]` Function Logic:**
-    * The function must be authenticated, receiving the user's `uid`.
-    * It fetches the user's last 7 days of `momentumLogs` from Firestore.
-    * It formats these logs into a prompt for the OpenAI API. The prompt should ask for a short, witty, and encouraging summary of the user's accomplishments (e.g., "Based on these accomplishments, write a short, encouraging summary for the user in one paragraph. Accomplishments: [...]").
-    * It calls the OpenAI API and returns the generated text.
-* **`[ ]` Frontend Integration:** Create a button on the dashboard like "✨ Generate My Vibe." On click, it calls the cloud function, shows a loading state, and then displays the returned summary in a visually appealing modal.
+# Provide your Gemini key (choose one)
+export GEMINI_API_KEY="your-gemini-key"
+# or
+firebase functions:config:set gemini.key="your-gemini-key"
 
------
+# Start Firebase emulators (Auth, Firestore, Functions)
+firebase emulators:start --only functions,firestore,auth
 
-## \#\# Frontend Vibe Check: The Gen Z Style Guide
+# In a new terminal: start the frontend
+cd frontend
+npm run dev
+# Open the printed localhost URL (usually http://localhost:5173)
+```
 
-The app's success depends on getting the "vibe" right. It must feel authentic, not corporate.
+## Features
 
-### \#\#\# UI/UX Principles ("Minimalist Maximalism")
+- Attention Swap overlay with calming visuals and short prompts
+- Momentum Log with real-time updates (Firestore onSnapshot)
+- Compass Goals (your top three, always visible and editable)
+- AI-powered summaries and weekly reflections (Gemini)
+- Tagging and goal-linking for logs to surface patterns
+- Optional Notion integration for events and tasks
+- Dark mode first, smooth transitions, curated accent themes
 
-* **Core Layout = Minimalist:** The main architecture must be clean, fast, and intuitive. No clutter. Ample whitespace. The user flow from adding a log to seeing it appear must be effortless.
-* **Personality Layer = Maximalist:** Self-expression is key. Allow for deep customization in user-controlled areas.
-    * **`[ ]` Dark Mode First:** The default theme is a sleek dark mode. A light mode can be an option later.
-    * **`[ ]` Bold & Clean Typography:** Use a modern, readable font. Use font weight and size to create hierarchy, not a million different colors.
-    * **`[ ]` Customizable Themes:** The "maximalist" part. Allow users to select from a curated list of 3-5 vibrant accent color themes (e.g., indigo, magenta, teal) that change buttons, highlights, and other UI elements.
-    * **`[ ]` Smooth Animations:** All interactions should have subtle, smooth transitions. Things fade in, not just appear. Modals slide up. This makes the app feel premium and alive.
+## Architecture
 
-### \#\#\# Language & Tone of Voice
+- Frontend: React + Vite, Tailwind, React Router
+- Backend: Firebase Cloud Functions (Node 18)
+- Data: Firestore (users, momentumLogs)
+- Auth: Firebase Auth (email/password, Google)
+- AI: Gemini (server-side via Cloud Functions)
+- Optional: Notion API (per-user token stored securely in Firestore)
 
-* **Witty & Encouraging:** The microcopy (button text, empty states, loading messages) is our personality. It should be supportive and occasionally witty, like a cool, encouraging friend.
-* **No "Cringe":** Avoid trying too hard to use slang. The humor should be smart and self-aware, not a forced meme. For example, instead of "That's fire 🔥," a loading message could be "Brewing up some good vibes..."
-* **Authentic & Direct:** Be straight with the user. Error messages should be clear and helpful.
-* **Shame-Free:** The app's language must **never** make the user feel guilty for not being productive. It celebrates what they *did* do, never what they didn't.
+Emulators are configured in `firebase.json`:
+- Auth: 9099 · Firestore: 8081 · Functions: 5001 · Emulator UI: 4001
 
------
+## Data model
 
-## \#\# Setup & Run
-
-1.  Navigate to the `frontend` directory: `cd frontend`
-2.  Install dependencies: `npm install`
-3.  Create a `firebase.js` file in `src/` with your Firebase project configuration.
-4.  Run the development server: `npm run dev`
-
-## \#\# Firestore Data Structure
+Users are stored at `/users/{uid}`. Logs live in a subcollection.
 
 ```javascript
-// /users/{userId}
+// /users/{uid}
 {
-  email: "user@example.com",
+  email: string,
   createdAt: Timestamp,
-  compassGoals: {
-    goal1: "My first goal",
-    goal2: "My second goal",
-    goal3: "My third goal"
-  }
+  compassGoals: { goal1: string, goal2: string, goal3: string }
 }
 
-// /users/{userId}/momentumLogs/{logId}
+// /users/{uid}/momentumLogs/{logId}
 {
-  text: "Finished reading a chapter.",
-  createdAt: Timestamp
+  text: string,
+  createdAt: Timestamp,
+  tags?: string[],
+  linkedGoal?: 'goal1' | 'goal2' | 'goal3'
 }
 ```
+
+Notion integration (per user): `/users/{uid}/integrations/notion` stores `accessToken`, optional database IDs.
+
+## Cloud Functions API
+
+- `generateMomentumSummary` (callable)
+  - Auth required. Summarizes the last 7 days of logs via Gemini, with a graceful fallback if AI is unavailable.
+- `generateWeeklyReflection` (callable)
+  - Auth required. Longer weekly reflection with insights/recommendations.
+- `saveNotionConfig` (callable)
+  - Auth required. Saves a user’s Notion `accessToken` and optional database IDs.
+- `fetchNotionEvents` (callable)
+  - Auth required. Reads events from a Notion database (date property) for the next N days.
+- `createNotionTask` (callable)
+  - Auth required. Creates a simple task page in a Notion database.
+- `createUserProfile` (auth trigger)
+  - On sign-up, seeds a user profile and default goals.
+
+Backend entrypoint: `backend/index.js`.
+
+## Configuration
+
+- Gemini API key (required for AI features):
+  - `export GEMINI_API_KEY="<key>"` (preferred for local dev), or
+  - `firebase functions:config:set gemini.key="<key>"` (works in emulator and prod)
+- Frontend Firebase web config: `frontend/src/firebase.js`
+  - Includes defaults for the sample project ID. To use your own Firebase project, replace the config with your Web App credentials.
+- Optional local file: `backend/config.example.js` → copy to `config.js` if you prefer file-based keys during development. `.gitignore` already excludes `config.js`.
+
+## Developer scripts
+
+Frontend (`frontend/package.json`):
+- `npm run dev` — Start Vite dev server
+- `npm run build` — Production build
+- `npm run preview` — Preview built app locally
+- `npm run lint` — ESLint
+
+Backend (`backend/package.json`):
+- `npm run serve` — Start Functions emulator (see root `firebase.json`)
+- `npm run shell` — Functions shell
+- `npm start` — Alias to shell
+- `npm run deploy` — Deploy Cloud Functions
+- `npm run logs` — Stream function logs
+- `npm test` — Run callable tests in `test-functions.js`
+
+## Running locally (recommended)
+
+- Use the emulators for rapid feedback and safe testing
+- Frontend auto-connects to emulators when on `localhost`
+- See `GETTING_STARTED.md` for a full walkthrough
+
+## Deployment
+
+Before your first deploy, set the production Gemini key:
+
+```bash
+firebase functions:config:set gemini.key="your-production-gemini-key"
+```
+
+Deploy in parts or all at once:
+
+```bash
+# Functions
+firebase deploy --only functions
+
+# Firestore rules
+firebase deploy --only firestore:rules
+
+# Hosting (frontend). firebase.json predeploy builds the app
+firebase deploy --only hosting
+```
+
+## Troubleshooting
+
+- API key errors: ensure `GEMINI_API_KEY` or `functions:config gemini.key` is set; restart emulators
+- Emulator ports busy: stop the process or adjust ports in `firebase.json`
+- Frontend not loading: run `npm run dev` in `frontend/` and open the printed URL
+- See `docs/README_RUN.md` for deeper diagnostics and commands
+
+## Contributing
+
+Issues and PRs welcome. If you add a new feature, include a quick usage note and, if relevant, emulator/test coverage.
+
+---
+
+Need a step-by-step local guide? See `GETTING_STARTED.md`. For long-form docs, see `docs/`.
