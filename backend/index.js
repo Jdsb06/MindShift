@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { Client: NotionClient } = require('@notionhq/client');
 const config = require('./config');
 
 // Initialize Firebase Admin
@@ -12,6 +13,157 @@ const genAI = new GoogleGenerativeAI(
 );
 
 const db = admin.firestore();
+
+/**
+ * NOTION INTEGRATION
+ * We store per-user Notion credentials in Firestore at:
+ * /users/{uid}/integrations/notion { accessToken, calendarDatabaseId, tasksDatabaseId, connectedAt }
+ * Only callable by the authenticated user. Functions will operate on behalf of the user.
+ */
+
+// Helper: get Notion client for a user
+async function getUserNotionClient(uid) {
+  const doc = await db.collection('users').doc(uid).collection('integrations').doc('notion').get();
+  if (!doc.exists) return null;
+  const data = doc.data();
+  if (!data || !data.accessToken) return null;
+  return new NotionClient({ auth: data.accessToken });
+}
+
+// Save or update Notion config for user
+exports.saveNotionConfig = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+  const uid = context.auth.uid;
+  const { accessToken, calendarDatabaseId, tasksDatabaseId } = data || {};
+
+  if (!accessToken) {
+    throw new functions.https.HttpsError('invalid-argument', 'accessToken is required');
+  }
+
+  await db.collection('users').doc(uid).collection('integrations').doc('notion').set({
+    accessToken,
+    calendarDatabaseId: calendarDatabaseId || null,
+    tasksDatabaseId: tasksDatabaseId || null,
+    connectedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  return { success: true };
+});
+
+// Fetch upcoming events from a Notion database acting as a Calendar (date property required)
+exports.fetchNotionEvents = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+  const uid = context.auth.uid;
+  const { maxDays = 14 } = data || {};
+
+  const integDoc = await db.collection('users').doc(uid).collection('integrations').doc('notion').get();
+  if (!integDoc.exists) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion not connected');
+  }
+  const integ = integDoc.data();
+  if (!integ.calendarDatabaseId) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion calendar database not set');
+  }
+
+  const notion = await getUserNotionClient(uid);
+  if (!notion) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion client unavailable');
+  }
+
+  const today = new Date();
+  const end = new Date();
+  end.setDate(end.getDate() + Math.min(90, Number(maxDays)));
+
+  // We assume the database has a Date property named "Date" and a Title property
+  const response = await notion.databases.query({
+    database_id: integ.calendarDatabaseId,
+    filter: {
+      and: [
+        {
+          property: 'Date',
+          date: {
+            on_or_after: today.toISOString(),
+          },
+        },
+        {
+          property: 'Date',
+          date: {
+            on_or_before: end.toISOString(),
+          },
+        },
+      ],
+    },
+    sorts: [
+      { property: 'Date', direction: 'ascending' },
+    ],
+    page_size: 100,
+  });
+
+  const events = (response.results || []).map((page) => {
+    const props = page.properties || {};
+    const title = (props.Name?.title?.[0]?.plain_text) || (props.Title?.title?.[0]?.plain_text) || 'Untitled';
+    const dateProp = props.Date?.date || props.Date || null;
+    const start = dateProp?.start || null;
+    const endDate = dateProp?.end || null;
+    const description = props.Description?.rich_text?.map((t) => t.plain_text).join(' ') || '';
+    return {
+      id: page.id,
+      title,
+      start,
+      end: endDate,
+      description,
+      source: 'notion',
+    };
+  });
+
+  return { events };
+});
+
+// Create a Notion task in a tasks database (simple title; optional Due date)
+exports.createNotionTask = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+  const uid = context.auth.uid;
+  const { title, due } = data || {};
+  if (!title) {
+    throw new functions.https.HttpsError('invalid-argument', 'title is required');
+  }
+
+  const integDoc = await db.collection('users').doc(uid).collection('integrations').doc('notion').get();
+  if (!integDoc.exists) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion not connected');
+  }
+  const integ = integDoc.data();
+  if (!integ.tasksDatabaseId) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion tasks database not set');
+  }
+
+  const notion = await getUserNotionClient(uid);
+  if (!notion) {
+    throw new functions.https.HttpsError('failed-precondition', 'Notion client unavailable');
+  }
+
+  const properties = {
+    Name: {
+      title: [{ type: 'text', text: { content: title } }],
+    },
+  };
+  if (due) {
+    properties.Due = { date: { start: new Date(due).toISOString() } };
+  }
+
+  const page = await notion.pages.create({
+    parent: { database_id: integ.tasksDatabaseId },
+    properties,
+  });
+
+  return { id: page.id };
+});
 
 /**
  * Generate Momentum Summary Cloud Function
