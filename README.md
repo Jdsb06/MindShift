@@ -18,19 +18,19 @@ Trade mindless scrolling for meaningful progress. A modern, Gen Z–friendly pro
 
 ## Table of contents
 
-- About the project
-- Mission statement
-- Key features
-- Demo and screenshots
-- Tech stack
-- Architecture (diagram)
-- Repository structure (diagram)
-- Quick start
-- API + data model
-- Configuration
-- Docs hub
-- Roadmap (future aspects)
-- Contributing
+- [About the project](#about-the-project)
+- [Mission statement](#mission-statement)
+- [Key features](#key-features)
+- [Demo and screenshots](#demo-and-screenshots)
+- [Tech stack](#tech-stack)
+- [Architecture (diagram)](#architecture-diagram)
+- [Repository structure (diagram)](#repository-structure-diagram)
+- [Quick start](#quick-start)
+- [API + data model](#api--data-model)
+- [Configuration](#configuration)
+- [Docs hub](#docs-hub)
+- [Roadmap (future aspects)](#roadmap-future-aspects)
+- [Contributing](#contributing)
 
 ---
 
@@ -95,61 +95,75 @@ Additional visuals:
 
 ## Architecture (diagram)
 
+Always-on ASCII diagram:
+
+```
+[Client] MindShift UI (React + Vite, Tailwind)
+  |\
+  | \-> Firebase Auth
+  |----> Firestore (real-time reads/writes)
+  \----> Cloud Functions (callable)
+
+[Cloud Functions]
+  <--> Firestore
+   --> Gemini AI
+   --> Notion API
+```
+
+Details (Mermaid, collapsible):
+
+<details>
+<summary>Mermaid (click to expand)</summary>
+
 ```mermaid
 flowchart LR
-  subgraph Client
-    A[MindShift UI (React + Vite, Tailwind)]
-  end
-
-  subgraph Firebase
-    B[Auth]
-    C[Firestore]
-    D[Cloud Functions]
-  end
-
-  E[(Gemini AI)]
-  F[(Notion API)]
-
-  A <--> B
-  A <--> C
-  A -->|Callable| D
-  D <--> C
-  D --> E
-  D --> F
-
-  classDef svc fill:#111,border-color:#444,color:#eee
-  class A,B,C,D,E,F svc
+  A[UI (React + Vite, Tailwind)] -->|Auth| B[Firebase Auth]
+  A -->|RT updates| C[Firestore]
+  A -->|Callable| D[Cloud Functions]
+  D --> C
+  D --> E[Gemini AI]
+  D --> F[Notion API]
 ```
+
+</details>
 
 ## Repository structure (diagram)
 
+Always-on ASCII tree:
+
+```
+MindShift/
+├─ frontend/
+│  ├─ src/
+│  │  ├─ components/
+│  │  ├─ pages/
+│  │  └─ contexts/
+│  └─ public/
+├─ backend/
+│  ├─ src/
+│  └─ config(.example).js
+├─ docs/
+│  ├─ README.md · ARCHITECTURE.md · API_REFERENCE.md · README_RUN.md
+├─ firebase.json · firestore.rules · firestore.indexes.json
+```
+
+Details (Mermaid, collapsible):
+
+<details>
+<summary>Mermaid (click to expand)</summary>
+
 ```mermaid
 graph TD
-  R[MindShift/] --> FE[frontend/]
-  R --> BE[backend/]
-  R --> DOCS[docs/]
-  R --> FB[firebase.json + firestore.rules + indexes]
-
-  FE --> FEsrc[src/]
-  FEsrc --> FEcmp[components/]
-  FEsrc --> FEpages[pages/]
-  FEsrc --> FEctx[contexts/]
-  FE --> FEpub[public/]
-
-  BE --> BEsrc[src/]
-  BE --> BEcfg[config(.example).js]
-
-  DOCS --> Didx[README.md]
-  DOCS --> Darch[ARCHITECTURE.md]
-  DOCS --> Dapi[API_REFERENCE.md]
-  DOCS --> Drun[README_RUN.md]
+  R[MindShift] --> FE[frontend]
+  FE --> FEs[src]
+  FE --> FEp[public]
+  R --> BE[backend]
+  BE --> BEs[src]
+  R --> DOCS[docs]
+  R --> FB[firebase + rules + indexes]
 ```
 
-If you prefer the classic tree view:
-
-```
-frontend/ · backend/ · docs/ · firebase.json · firestore.rules · firestore.indexes.json
-```
+</details>
 
 ## Quick start
 
