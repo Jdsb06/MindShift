@@ -226,13 +226,13 @@ Data model highlights:
 ## Docs hub
 
 All the details live in the docs folder:
-- Start here: [here](./docs/README.md)
-- Architecture: [here](./docs/ARCHITECTURE.md)
-- API Reference: [here](./docs/API_REFERENCE.md)
-- Local run guide: [here](./docs/README_RUN.md) and [here](./GETTING_STARTED.md)
-- Emulators: [here](./docs/EMULATORS.md)
-- Deployment: [here](./docs/DEPLOYMENT_GUIDE.md)
-- Troubleshooting: [here](./docs/TROUBLESHOOTING.md)
+- Start here: [Begin Your Journey](./docs/README.md)
+- Architecture: [View the Blueprint](./docs/ARCHITECTURE.md)
+- API Reference: [Explore the API](./docs/API_REFERENCE.md)
+- Local run guide: [Launch Locally](./docs/README_RUN.md) and [here](./GETTING_STARTED.md)
+- Emulators: [Test with Emulators](./docs/EMULATORS.md)
+- Deployment: [Go Live Guide](./docs/DEPLOYMENT_GUIDE.md)
+- Troubleshooting: [Solve Common Issues](./docs/TROUBLESHOOTING.md)
 
 ## Roadmap (future aspects)
 
@@ -248,4 +248,4 @@ Issues and PRs welcome. If you add a new feature, include a quick usage note and
 
 —
 
-Need a step-by-step local guide? See [here](./GETTING_STARTED.md). For a full index, start at [Docs](./docs/README.md).
+Need a step-by-step local guide? See [GETTING_STARTED GUIDE](./GETTING_STARTED.md). For a full index, start at [Docs](./docs/README.md).
