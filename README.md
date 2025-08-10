@@ -117,12 +117,19 @@ Details (Mermaid, collapsible):
 
 ```mermaid
 flowchart LR
-  A[UI (React + Vite, Tailwind)] -->|Auth| B[Firebase Auth]
-  A -->|RT updates| C[Firestore]
-  A -->|Callable| D[Cloud Functions]
+  A[UI]
+  B[Firebase Auth]
+  C[Firestore]
+  D[Cloud Functions]
+  E[Gemini AI]
+  F[Notion API]
+
+  A --> B
+  A --> C
+  A --> D
   D --> C
-  D --> E[Gemini AI]
-  D --> F[Notion API]
+  D --> E
+  D --> F
 ```
 
 </details>
@@ -154,20 +161,29 @@ Details (Mermaid, collapsible):
 
 ```mermaid
 graph TD
-  R[MindShift] --> FE[frontend]
-  FE --> FEs[src]
-  FE --> FEp[public]
-  R --> BE[backend]
-  BE --> BEs[src]
-  R --> DOCS[docs]
-  R --> FB[firebase + rules + indexes]
+  R[MindShift]
+  FE[frontend]
+  BE[backend]
+  DOCS[docs]
+  FB[firebase + rules + indexes]
+  FEs[src]
+  FEp[public]
+  BEs[src]
+
+  R --> FE
+  R --> BE
+  R --> DOCS
+  R --> FB
+  FE --> FEs
+  FE --> FEp
+  BE --> BEs
 ```
 
 </details>
 
 ## Quick start
 
-Prefer the full step-by-step? See GETTING_STARTED.md.
+Prefer the full step-by-step? See [Getting Started Guide](./GETTING_STARTED.md).
 
 ```bash
 # From the repo root
