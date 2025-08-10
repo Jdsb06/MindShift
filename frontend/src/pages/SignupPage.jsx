@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import ColorSchemeSelector from '../components/ColorSchemeSelector';
 
 export default function SignupPage() {
     const [email, setEmail] = useState('');
@@ -33,6 +34,7 @@ export default function SignupPage() {
                     goal2: 'Define your second long-term goal.',
                     goal3: 'Define your third long-term goal.',
                 },
+                hasCompletedOnboarding: false, // Set to false to show onboarding flow
             });
 
             // Redirect to dashboard
@@ -47,7 +49,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center p-4 animate-fade-in`}>
+        <div className="min-h-screen bg-theme-primary flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full max-w-md">
                 {/* Header */}
                 <div className="text-center mb-8 animate-slide-in">
@@ -69,7 +71,10 @@ export default function SignupPage() {
                                 <h2 className="text-2xl font-bold text-white mb-2">Join MindShift</h2>
                                 <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Level up your productivity game</p>
                             </div>
-                            <ThemeToggle />
+                            <div className="flex items-center gap-3">
+                                <ThemeToggle />
+                                <ColorSchemeSelector />
+                            </div>
                         </div>
 
                         <form onSubmit={handleSignup} className="space-y-4">

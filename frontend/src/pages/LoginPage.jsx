@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import ColorSchemeSelector from '../components/ColorSchemeSelector';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -64,12 +65,15 @@ export default function LoginPage() {
     };
 
     return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center p-4 animate-fade-in`}>
+        <div className="min-h-screen bg-theme-primary flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full max-w-md card-modern animate-scale-in">
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-3xl font-bold text-white text-center mb-1">👋 Welcome Back!</h1>
-                        <ThemeToggle />
+                        <div className="flex items-center gap-3">
+                            <ThemeToggle />
+                            <ColorSchemeSelector />
+                        </div>
                     </div>
                     <p className={`text-center mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Ready to crush your goals today?</p>
 

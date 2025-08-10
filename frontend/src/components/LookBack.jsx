@@ -20,11 +20,11 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
 
     const generateReviewData = () => {
         setIsGenerating(true);
-        
+
         // Calculate date range
         const now = new Date();
         const startDate = new Date();
-        
+
         if (selectedPeriod === 'week') {
             startDate.setDate(now.getDate() - 7);
         } else {
@@ -113,7 +113,7 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
 
     const generateInsights = (logs, topTags, topGoals, activeDays) => {
         const insights = [];
-        
+
         if (logs.length > 0) {
             insights.push(`You logged ${logs.length} accomplishments across ${activeDays} days`);
         }
@@ -135,7 +135,7 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
 
     const generateRecommendations = (logs, topTags, topGoals) => {
         const recommendations = [];
-        
+
         if (logs.length < 5) {
             recommendations.push("Try logging at least one win per day to build momentum");
         }
@@ -170,7 +170,7 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
                     {days.map((day, index) => {
                         const count = reviewData.dailyActivity[day];
                         const intensity = maxCount > 0 ? count / maxCount : 0;
-                        
+
                         return (
                             <div
                                 key={day}
@@ -200,19 +200,19 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
                 <div className="space-y-2">
                     {reviewData.topTags.map((tag, index) => {
                         const percentage = total > 0 ? (tag.count / total) * 100 : 0;
-                        
+
                         return (
                             <div key={tag.tag} className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-white min-w-[60px]">
+                                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'} min-w-[60px]`}>
                                     {tag.tag}
                                 </span>
-                                <div className="flex-1 bg-gray-700 rounded-full h-2">
+                                <div className={`flex-1 ${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded-full h-2`}>
                                     <div
                                         className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
                                         style={{ width: `${percentage}%` }}
                                     />
                                 </div>
-                                <span className="text-sm text-gray-400 min-w-[40px] text-right">
+                                <span className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'} min-w-[40px] text-right`}>
                                     {tag.count}
                                 </span>
                             </div>
@@ -228,18 +228,19 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="card-modern max-w-4xl mx-auto animate-scale-in max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                         <div className="text-2xl animate-float">📊</div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">Look Back</h3>
+                        <h3 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Look Back</h3>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-300 transition-colors"
+                        className={`${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'} transition-colors`}
                     >
                         <span className="text-2xl">×</span>
                     </button>
                 </div>
+                <div className={`mb-6 text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'} text-center`}>Reflection creates direction. Learn the rhythm; design the next move.</div>
 
                 {/* Period Selector */}
                 <div className="flex gap-2 mb-6">
@@ -262,7 +263,7 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
                 {isGenerating ? (
                     <div className="text-center py-8">
                         <div className="text-4xl mb-4 animate-pulse">📊</div>
-                        <p className="text-gray-300">Generating your review...</p>
+                        <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Generating your review...</p>
                     </div>
                 ) : reviewData ? (
                     <div className="space-y-6">
@@ -270,19 +271,19 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                                 <div className="text-2xl font-bold text-indigo-500">{reviewData.totalEntries}</div>
-                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total Wins</div>
+                                <div className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Total Wins</div>
                             </div>
                             <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                                 <div className="text-2xl font-bold text-green-500">{reviewData.activeDays}</div>
-                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Active Days</div>
+                                <div className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Active Days</div>
                             </div>
                             <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                                 <div className="text-2xl font-bold text-purple-500">{reviewData.topTags.length}</div>
-                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Focus Areas</div>
+                                <div className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Focus Areas</div>
                             </div>
                             <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                                 <div className="text-2xl font-bold text-yellow-500">{reviewData.topGoals.length}</div>
-                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Goals Progress</div>
+                                <div className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Goals Progress</div>
                             </div>
                         </div>
 
@@ -344,7 +345,7 @@ export default function LookBack({ isOpen, onClose, momentumLogs, compassGoals }
                 ) : (
                     <div className="text-center py-8">
                         <div className="text-4xl mb-4 animate-float">🌟</div>
-                        <p className="text-gray-300">No data available for this period</p>
+                        <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'}`}>No data available for this period</p>
                     </div>
                 )}
             </div>
