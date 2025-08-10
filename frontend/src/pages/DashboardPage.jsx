@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { 
@@ -18,6 +18,7 @@ import { auth, db, functions } from '../firebase';
 import { MindShiftFunctionTester } from '../utils/functionTests';
 import { useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import ColorSchemeSelector from '../components/ColorSchemeSelector';
 import TagSelector from '../components/TagSelector';
 import GoalLinker from '../components/GoalLinker';
 import TagFilter from '../components/TagFilter';
@@ -26,10 +27,21 @@ import LookBack from '../components/LookBack';
 import MomentumHeatmap from '../components/MomentumHeatmap';
 import ProgressRing from '../components/ProgressRing';
 import Tooltip from '../components/Tooltip';
+import OnboardingFlow from '../components/OnboardingFlow';
+import AIConnectionCard from '../components/AIConnectionCard';
+import CompassJourneyView from '../components/CompassJourneyView';
+import OnboardingOverlay from '../components/OnboardingOverlay';
+import SegmentedControl from '../components/SegmentedControl';
+// import GridTrailBackground from '../components/GridTrailBackground';
+import PostSignupIntro from '../components/PostSignupIntro';
+import FuturisticIntro from '../components/FuturisticIntro';
+import CalendarTasksOverlay from '../components/CalendarTasksOverlay';
 
 export default function DashboardPage() {
     const navigate = useNavigate();
     const { isDark } = useTheme();
+    const momentumSectionRef = useRef(null);
+    // const [creativeTrailEnabled, setCreativeTrailEnabled] = useState(true);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [compassGoals, setCompassGoals] = useState({
@@ -53,12 +65,30 @@ export default function DashboardPage() {
     const [generatingReflection, setGeneratingReflection] = useState(false);
     const [showUnwindProtocol, setShowUnwindProtocol] = useState(false);
     const [showLookBack, setShowLookBack] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showCalendarOverlay, setShowCalendarOverlay] = useState(false);
+    const [logView, setLogView] = useState('all');
+    const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true); // Default to true to avoid flashing
+    const [userDesiredFeeling, setUserDesiredFeeling] = useState(null);
+    const [hasSelectedFeeling, setHasSelectedFeeling] = useState(false);
+    const [showCompassJourney, setShowCompassJourney] = useState(false);
+    const [selectedJourneyGoal, setSelectedJourneyGoal] = useState(null);
+    const [selectedJourneyGoalId, setSelectedJourneyGoalId] = useState(null);
+    const [userData, setUserData] = useState(null);
+    const [showIntro, setShowIntro] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('ms_intro_seen') !== '1';
+    });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUser(user);
                 loadUserData(user.uid);
+                // Mark intro to auto-hide later if already seen
+                if (localStorage.getItem('ms_intro_seen') === '1') {
+                    setShowIntro(false);
+                }
             } else {
                 navigate('/');
             }
@@ -73,7 +103,21 @@ export default function DashboardPage() {
             // Load compass goals
             const userDoc = await getDoc(doc(db, 'users', userId));
             if (userDoc.exists()) {
-                setCompassGoals(userDoc.data().compassGoals || compassGoals);
+                const data = userDoc.data();
+                setCompassGoals(data.compassGoals || compassGoals);
+                if (data.onboardingCompleted !== true) {
+                    setShowOnboarding(true);
+                }
+            } else {
+                setShowOnboarding(true);
+            }
+
+            // Load user's desired feeling preference
+            if (userDoc.exists()) {
+                if (userDoc.data().desiredFeeling) {
+                    setUserDesiredFeeling(userDoc.data().desiredFeeling);
+                    setHasSelectedFeeling(true);
+                }
             }
 
             // Load momentum logs
@@ -193,9 +237,18 @@ export default function DashboardPage() {
 
     // Filter logs based on selected tags
     const getFilteredLogs = () => {
-        if (filterTags.length === 0) return momentumLogs;
-        return momentumLogs.filter(log => 
-            log.tags && log.tags.some(tag => filterTags.includes(tag))
+        // First apply segmented control filter
+        let base = momentumLogs;
+        if (logView === 'tagged') {
+            base = base.filter(log => Array.isArray(log.tags) && log.tags.length > 0);
+        } else if (logView === 'goals') {
+            base = base.filter(log => !!log.linkedGoal);
+        }
+
+        // Then apply tag chips filter if any are selected
+        if (filterTags.length === 0) return base;
+        return base.filter(log => 
+            Array.isArray(log.tags) && log.tags.some(tag => filterTags.includes(tag))
         );
     };
 
@@ -211,9 +264,28 @@ export default function DashboardPage() {
         setFilterTags([]);
     };
 
+    const completeOnboarding = async () => {
+        try {
+            await updateDoc(doc(db, 'users', user.uid), { onboardingCompleted: true });
+        } catch (e) {
+            // user doc might not exist yet, ignore
+        }
+        setShowOnboarding(false);
+    };
+
+    const saveOnboardingGoals = async (goals) => {
+        const newGoals = { goal1: goals[0] || compassGoals.goal1, goal2: goals[1] || compassGoals.goal2, goal3: goals[2] || compassGoals.goal3 };
+        setCompassGoals(newGoals);
+        try {
+            await updateDoc(doc(db, 'users', user.uid), { compassGoals: newGoals });
+        } catch (e) {
+            // ignore if doc missing; it will be created by other flows
+        }
+    };
+
     if (loading) {
         return (
-            <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center animate-fade-in`}>
+            <div className="min-h-screen bg-theme-primary flex items-center justify-center animate-fade-in">
                 <div className="text-center">
                     <div className="text-4xl mb-4 animate-pulse">🧠</div>
                     <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>Loading your sanctuary...</p>
@@ -226,7 +298,15 @@ export default function DashboardPage() {
     const availableTags = getAllTags();
 
     return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-gray-200' : 'bg-gray-50 text-gray-800'} animate-fade-in`}>
+        <div 
+            className="min-h-screen bg-theme-primary dashboard-animated-bg animate-fade-in"
+        >
+            {/* Original subtle decorative particles */}
+            <div className="dashboard-particle"></div>
+            <div className="dashboard-particle"></div>
+            <div className="dashboard-particle"></div>
+            <div className="dashboard-particle"></div>
+
             {/* Header */}
             <div className="px-4 sm:px-6 lg:px-8 py-6">
                 <div className="max-w-7xl mx-auto">
@@ -243,14 +323,24 @@ export default function DashboardPage() {
                                     Hey {user.email?.split('@')[0]}! ✨
                                 </span>
                             )}
-                            <ThemeToggle />
-                            <button
-                                onClick={runFunctionTests}
-                                disabled={testing}
-                                className="px-4 py-2 bg-yellow-600 rounded-full text-white font-medium hover:bg-yellow-700 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:transform-none"
-                            >
-                                {testing ? 'Testing... 🧪' : 'Test Functions 🧪'}
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <ThemeToggle />
+                                <ColorSchemeSelector />
+                                <button
+                                    onClick={() => setShowCalendarOverlay(true)}
+                                    className="px-4 py-2 bg-indigo-600 rounded-full text-white font-medium hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                    title="Calendar & Tasks"
+                                >
+                                    Calendar
+                                </button>
+                                <button
+                                    onClick={() => navigate('/play')}
+                                    className="px-4 py-2 bg-pink-600 rounded-full text-white font-medium hover:bg-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                    title="Stress Release — MindShift Create"
+                                >
+                                    Stress Release 🫁
+                                </button>
+                            </div>
                             <button
                                 onClick={handleLogout}
                                 className={`px-4 py-2 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} rounded-full ${isDark ? 'text-white' : 'text-gray-800'} font-medium transition-all duration-200 transform hover:scale-105 shadow-lg`}
@@ -265,21 +355,92 @@ export default function DashboardPage() {
             {/* Main Content */}
             <div className="px-4 sm:px-6 lg:px-8 pb-8">
                 <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Overlay mount */}
+                    <CalendarTasksOverlay user={user} isOpen={showCalendarOverlay} onClose={() => setShowCalendarOverlay(false)} />
+                    {/* Philosophy + Superpowers */}
+                    <div className="card-zen animate-slide-in">
+                        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                            {/* Philosophy */}
+                            <div className="flex-1 rounded-2xl p-6 relative overflow-hidden border border-indigo-500/20" style={{background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(147,51,234,0.10) 50%, rgba(236,72,153,0.10) 100%)'}}>
+                                <div className="absolute inset-0 pointer-events-none" style={{maskImage: 'radial-gradient(60% 60% at 20% 10%, black, transparent)'}}/>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="text-2xl sm:text-3xl">🧭</div>
+                                    <h2 className="text-xl sm:text-2xl section-title">The MindShift Philosophy</h2>
+                                </div>
+                                <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} text-base leading-relaxed mb-4`}>
+                                    Tools don’t change you. Principles do. MindShift is a sanctuary for intention—designed to help you choose what matters and let the rest soften into silence.
+                                </p>
+                                <ul className={`grid sm:grid-cols-3 gap-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <li className="p-3 rounded-xl bg-black/10 border border-white/10">Intention over attention</li>
+                                    <li className="p-3 rounded-xl bg-black/10 border border-white/10">Quality over quantity</li>
+                                    <li className="p-3 rounded-xl bg-black/10 border border-white/10">Momentum over burnout</li>
+                                </ul>
+                            </div>
+
+                            {/* Superpowers */}
+                            <div className="flex-1 rounded-2xl p-6 relative overflow-hidden border border-indigo-500/20" style={{background: 'linear-gradient(135deg, rgba(99,102,241,0.14) 0%, rgba(56,189,248,0.10) 100%)'}}>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="text-2xl sm:text-3xl">⚡</div>
+                                    <h2 className="text-xl sm:text-2xl section-title">Superpowers</h2>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    <button onClick={() => momentumSectionRef.current?.scrollIntoView({behavior:'smooth', block:'start'})} className="card-zen p-4 text-left hover:scale-[1.02] transition-all">
+                                        <div className="text-2xl mb-1">📈</div>
+                                        <div className="font-medium">Momentum Log</div>
+                                        <div className="text-xs opacity-70">Celebrate micro-wins → compound progress</div>
+                                    </button>
+                                    <button onClick={() => setShowCompassJourney(true)} className="card-zen p-4 text-left hover:scale-[1.02] transition-all">
+                                        <div className="text-2xl mb-1">🗺️</div>
+                                        <div className="font-medium">Journey</div>
+                                        <div className="text-xs opacity-70">See the story your actions are writing</div>
+                                    </button>
+                                    <button onClick={() => setShowUnwindProtocol(true)} className="card-zen p-4 text-left hover:scale-[1.02] transition-all">
+                                        <div className="text-2xl mb-1">🧘</div>
+                                        <div className="font-medium">Unwind Protocol</div>
+                                        <div className="text-xs opacity-70">Reset your nervous system in minutes</div>
+                                    </button>
+                                    <button onClick={() => setShowCalendarOverlay(true)} className="card-zen p-4 text-left hover:scale-[1.02] transition-all">
+                                        <div className="text-2xl mb-1">🗓️</div>
+                                        <div className="font-medium">Calendar & Tasks</div>
+                                        <div className="text-xs opacity-70">Turn intention into aligned action</div>
+                                    </button>
+                                    <button onClick={() => setShowLookBack(true)} className="card-zen p-4 text-left hover:scale-[1.02] transition-all">
+                                        <div className="text-2xl mb-1">📊</div>
+                                        <div className="font-medium">Look Back</div>
+                                        <div className="text-xs opacity-70">Reflect → refine → re-align</div>
+                                    </button>
+                                    <button onClick={generateAiSummary} className="card-zen p-4 text-left hover:scale-[1.02] transition-all disabled:opacity-60" disabled={generatingSummary}>
+                                        <div className="text-2xl mb-1">🤖</div>
+                                        <div className="font-medium">AI Coach</div>
+                                        <div className="text-xs opacity-70">Instant insights, compassionate guidance</div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {/* Compass Goals */}
-                    <div className="card-modern animate-slide-in">
+                    <div className="card-zen animate-slide-in">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl sm:text-3xl animate-float">🧭</div>
-                                <h2 className="text-xl sm:text-2xl font-bold text-white">
+                                <h2 className="text-xl sm:text-2xl section-title">
                                     Your Compass
                                 </h2>
                             </div>
-                            <button
-                                onClick={() => setShowGoalModal(true)}
-                                className="btn-primary"
-                            >
-                                Edit Goals
-                            </button>
+                            <div className="flex items-center gap-2 ml-auto">
+                                <button
+                                    onClick={() => setShowGoalModal(true)}
+                                    className="btn-primary"
+                                >
+                                    Edit Goals
+                                </button>
+                                <button
+                                    onClick={() => setShowCompassJourney(true)}
+                                    className="btn-primary"
+                                >
+                                    View Journey
+                                </button>
+                            </div>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {Object.entries(compassGoals).map(([key, goal], index) => {
@@ -288,13 +449,13 @@ export default function DashboardPage() {
                                 const totalSteps = 10;
                                 const progress = Math.min(goalLogs.length / totalSteps, 1);
                                 return (
-                                    <div key={key} className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl border-l-4 border-indigo-500 shadow-lg hover:shadow-xl transition-all duration-200 animate-scale-in flex flex-col items-center`} style={{ animationDelay: `${index * 0.1}s` }}>
+                                    <div key={key} className={`card-zen-tile animate-scale-in flex flex-col items-center`} style={{ animationDelay: `${index * 0.1}s` }}>
                                         <ProgressRing progress={progress} size={64} color={['#6366F1','#8B5CF6','#EC4899'][index]}>
                                             <span>{['🎯', '🌟', '💫'][index]}</span>
                                         </ProgressRing>
-                                        <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} text-sm sm:text-base leading-relaxed mt-3 text-center`}>{goal}</p>
+                                        <p className={`text-sm sm:text-base leading-relaxed mt-3 text-center`}>{goal}</p>
                                         {goalLogs.length > 0 && (
-                                            <p className={`text-xs mt-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>{goalLogs.length} step{goalLogs.length !== 1 ? 's' : ''} taken</p>
+                                            <p className={`text-xs mt-2 opacity-70`}>{goalLogs.length} step{goalLogs.length !== 1 ? 's' : ''} taken</p>
                                         )}
                                     </div>
                                 );
@@ -303,14 +464,24 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Momentum Log */}
-                    <div className="card-modern animate-slide-in" style={{ animationDelay: '0.2s' }}>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="text-2xl sm:text-3xl animate-float">📈</div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-white">
-                                Momentum Log
-                            </h2>
+                    <div ref={momentumSectionRef} className="card-zen animate-slide-in" style={{ animationDelay: '0.2s' }}>
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl sm:text-3xl animate-float">📈</div>
+                                <h2 className="text-xl sm:text-2xl section-title">
+                                    Momentum Log
+                                </h2>
+                            </div>
+                            <div className={`hidden sm:block text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
+                                Progress over pressure • Celebrate small, ship consistently
+                            </div>
+                            <SegmentedControl
+                              options={[{label:'All', value:'all'},{label:'Tagged', value:'tagged'},{label:'Goals', value:'goals'}]}
+                              value={logView}
+                              onChange={setLogView}
+                            />
                         </div>
-                        
+
                         {/* Tag Filter */}
                         {availableTags.length > 0 && (
                             <div className="mb-6 animate-slide-in" style={{ animationDelay: '0.3s' }}>
@@ -331,7 +502,7 @@ export default function DashboardPage() {
                                     value={newLog}
                                     onChange={(e) => setNewLog(e.target.value)}
                                     placeholder="What's a win from today? ✨"
-                                    className="input-modern flex-1"
+                                    className="input-zen flex-1"
                                     onKeyPress={(e) => e.key === 'Enter' && addMomentumLog()}
                                 />
                                 <button
@@ -341,14 +512,14 @@ export default function DashboardPage() {
                                     Add ✨
                                 </button>
                             </div>
-                            
+
                             {/* Tag Selector */}
                             <TagSelector
                                 selectedTags={newLogTags}
                                 onTagsChange={setNewLogTags}
                                 placeholder="Add tags to categorize your win..."
                             />
-                            
+
                             {/* Goal Linker */}
                             <GoalLinker
                                 compassGoals={compassGoals}
@@ -360,30 +531,30 @@ export default function DashboardPage() {
                         {/* Logs Display */}
                         <div className="space-y-3">
                             {filteredLogs.map((log, index) => (
-                                <div key={log.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-xl border ${isDark ? 'border-gray-700 hover:border-indigo-500' : 'border-gray-200 hover:border-indigo-400'} transition-all duration-200 momentum-entry`} style={{ animationDelay: `${index * 0.05}s` }}>
+                                <div key={log.id} className={`card-zen p-4 transition-all duration-200 momentum-entry`} style={{ animationDelay: `${index * 0.05}s` }}>
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
-                                            <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} text-sm sm:text-base flex-1`}>{log.text}</p>
-                                            
+                                            <p className={`text-sm sm:text-base flex-1`}>{log.text}</p>
+
                                             {/* Tags */}
                                             {log.tags && log.tags.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-2">
                                                     {log.tags.map((tag, tagIndex) => (
                                                         <span
                                                             key={tagIndex}
-                                                            className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${isDark ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-800'}`}
+                                                            className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-indigo-600/20 text-indigo-300`}
                                                         >
                                                             {tag}
                                                         </span>
                                                     ))}
                                                 </div>
                                             )}
-                                            
+
                                             {/* Linked Goal */}
                                             {log.linkedGoal && (
                                                 <div className="flex items-center gap-1 mt-2">
                                                     <span className="text-xs text-indigo-400">→</span>
-                                                    <span className={`text-xs ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                                    <span className={`text-xs text-indigo-400`}>
                                                         {log.linkedGoal}
                                                     </span>
                                                 </div>
@@ -416,14 +587,15 @@ export default function DashboardPage() {
                     <MomentumHeatmap momentumLogs={momentumLogs} />
 
                     {/* AI Coach */}
-                    <div className="card-modern animate-slide-in" style={{ animationDelay: '0.4s' }}>
+            <div className="card-zen animate-slide-in" style={{ animationDelay: '0.4s' }}>
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl sm:text-3xl animate-float">🤖</div>
-                                <h2 className="text-xl sm:text-2xl font-bold text-white">
+                                <h2 className="text-xl sm:text-2xl section-title">
                                     AI Coach
                                 </h2>
                             </div>
+                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Insight without judgment. Guidance without grind.</div>
                             <div className="flex gap-2 flex-wrap">
                                 <button
                                     onClick={() => setShowLookBack(true)}
@@ -464,8 +636,19 @@ export default function DashboardPage() {
                                 </button>
                             </div>
                         </div>
-                        
-                        {/* AI Stats */}
+
+                        {/* Show AI Connection Card for new users with few entries */}
+                        {momentumLogs.length < 5 && !aiStats && !hasSelectedFeeling && user && (
+                            <AIConnectionCard
+                                user={user}
+                                onFeelingSelected={(feeling) => {
+                                    setUserDesiredFeeling(feeling.value);
+                                    setHasSelectedFeeling(true);
+                                }}
+                            />
+                        )}
+
+                        {/* AI Stats - Only shown for users with sufficient data */}
                         {aiStats && (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 animate-fade-in">
                                 <div className={`text-center p-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -486,7 +669,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         )}
-                        
+
                         {aiSummary && (
                             <div className="bg-indigo-600 bg-opacity-20 p-6 rounded-xl border border-indigo-500 border-opacity-30 animate-fade-in">
                                 <p className={`${isDark ? 'text-gray-200' : 'text-gray-700'} text-sm sm:text-base leading-relaxed`}>{aiSummary}</p>
@@ -695,6 +878,52 @@ export default function DashboardPage() {
                 momentumLogs={momentumLogs}
                 compassGoals={compassGoals}
             />
+
+            {/* Onboarding Overlay */}
+            <OnboardingOverlay 
+                isOpen={showOnboarding}
+                onComplete={completeOnboarding}
+                onSaveGoals={saveOnboardingGoals}
+            />
+
+            {/* Onboarding Flow */}
+            {!hasCompletedOnboarding && user && (
+                <OnboardingFlow
+                    user={user}
+                    onComplete={() => setHasCompletedOnboarding(true)}
+                />
+            )}
+
+            {/* Compass Journey View Modal */}
+            {showCompassJourney && (
+                <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="card-modern max-w-3xl mx-auto animate-scale-in max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl animate-float">🗺️</div>
+                                <h3 className="text-xl sm:text-2xl font-bold text-white">Your Journey</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowCompassJourney(false)}
+                                className="text-gray-400 hover:text-gray-300 transition-colors"
+                            >
+                                <span className="text-2xl">×</span>
+                            </button>
+                        </div>
+
+                        {/* Compass Journey Content */}
+                        <div className="mb-6">
+                            <CompassJourneyView
+                                user={user}
+                                momentumLogs={momentumLogs}
+                                compassGoals={compassGoals}
+                                onClose={() => setShowCompassJourney(false)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+            <FuturisticIntro isOpen={showIntro} onClose={() => { setShowIntro(false); localStorage.setItem('ms_intro_seen','1'); }} />
         </div>
     );
 }
