@@ -1,12 +1,10 @@
 # API Reference (Cloud Functions)
 
-All functions are HTTPS callable and require Firebase Authentication unless noted.
+All documented functions are callable HTTPS functions and require Firebase Authentication unless noted. Use the Firebase SDK from the frontend rather than raw HTTP.
 
-Base (emulator, local dev):
+## Base (emulator, local dev)
 - Functions: http://localhost:5001
 - Emulator UI: http://localhost:4001
-
-In production, callable functions are invoked via the Firebase SDK, not raw HTTP.
 
 ## generateMomentumSummary
 - Method: callable
@@ -23,7 +21,15 @@ In production, callable functions are invoked via the Firebase SDK, not raw HTTP
   goalLinkedEntries?: number
 }
 ```
-- Behavior: Fetches last 7 days of `/users/{uid}/momentumLogs`, builds a short, encouraging summary using Gemini. Falls back to a deterministic summary if AI isn’t available.
+- Notes: Uses Gemini (`gemini-1.5-flash`); falls back to deterministic summary if AI isn’t available.
+ - Frontend usage:
+   ```js
+   import { httpsCallable } from 'firebase/functions';
+   import { functions } from '../src/firebase';
+   const fn = httpsCallable(functions, 'generateMomentumSummary');
+   const { data } = await fn();
+   console.log(data.summary);
+   ```
 
 ## generateWeeklyReflection
 - Method: callable
@@ -45,7 +51,12 @@ In production, callable functions are invoked via the Firebase SDK, not raw HTTP
   }
 }
 ```
-- Behavior: Composes a weekly reflection from user goals + recent logs.
+ - Frontend usage:
+   ```js
+   const fn = httpsCallable(functions, 'generateWeeklyReflection');
+   const { data } = await fn();
+   console.log(data.reflection, data.insights, data.recommendations);
+   ```
 
 ## saveNotionConfig
 - Method: callable
@@ -59,7 +70,11 @@ In production, callable functions are invoked via the Firebase SDK, not raw HTTP
 }
 ```
 - Output: `{ success: true }`
-- Behavior: Stores Notion credentials for the user under `/users/{uid}/integrations/notion`.
+ - Frontend usage:
+   ```js
+   const fn = httpsCallable(functions, 'saveNotionConfig');
+   await fn({ accessToken, calendarDatabaseId, tasksDatabaseId });
+   ```
 
 ## fetchNotionEvents
 - Method: callable
@@ -83,7 +98,13 @@ In production, callable functions are invoked via the Firebase SDK, not raw HTTP
   }>
 }
 ```
-- Behavior: Queries a Notion database with a Date property and returns upcoming events.
+- Notes: Expects a Notion database with a Date property named "Date" and a Title/Name property.
+ - Frontend usage:
+   ```js
+   const fn = httpsCallable(functions, 'fetchNotionEvents');
+   const { data } = await fn({ maxDays: 14 });
+   console.table(data.events);
+   ```
 
 ## createNotionTask
 - Method: callable
@@ -95,12 +116,14 @@ In production, callable functions are invoked via the Firebase SDK, not raw HTTP
   due?: string | Date
 }
 ```
-- Output:
-```
-{ id: string }
-```
-- Behavior: Creates a simple page (task) in the configured Notion tasks database.
+- Output: `{ id: string }`
+ - Frontend usage:
+   ```js
+   const fn = httpsCallable(functions, 'createNotionTask');
+   const { data } = await fn({ title: 'Read book', due: new Date() });
+   console.log('Created task', data.id);
+   ```
 
 ## createUserProfile (Auth trigger)
 - Method: `functions.auth.user().onCreate`
-- Behavior: Seeds a profile with default compass goals.
+- Behavior: Seeds a user profile with default compass goals

@@ -1,161 +1,86 @@
-# MindShift Backend - Firebase Setup ✅
+# MindShift Backend - Firebase Setup
 
-The backend has been successfully configured according to the README requirements. Here's what has been implemented:
+This describes the backend as it exists in this repo and how to run or deploy it.
 
-## ✅ Completed Features
+## Implemented capabilities
 
-### 🔥 Firebase Cloud Functions
-- **`generateMomentumSummary`** - Creates personalized AI summaries of user accomplishments
-- **`createUserProfile`** - Automatically creates user profiles on signup
+- Cloud Functions (Node 18)
+  - `generateMomentumSummary` (callable)
+  - `generateWeeklyReflection` (callable)
+  - `saveNotionConfig` (callable)
+  - `fetchNotionEvents` (callable)
+  - `createNotionTask` (callable)
+  - `createUserProfile` (Auth onCreate trigger)
+- Firestore
+  - `/users/{uid}` with `compassGoals`, metadata
+  - `/users/{uid}/momentumLogs/{logId}` for accomplishments
+  - Optional `/users/{uid}/integrations/notion`
+- AI via Google Gemini (`@google/generative-ai`)
+  - Model: `gemini-1.5-flash`
+  - Key loaded from `backend/config.js`, `functions.config().gemini.key`, or `GEMINI_API_KEY`
 
-### 🗄️ Firestore Data Structure
-- **Users Collection**: `/users/{userId}` with compass goals
-- **Momentum Logs**: `/users/{userId}/momentumLogs/{logId}` subcollection
-- **Security Rules**: Proper authentication and authorization
+## Key files
 
-### 🤖 AI Integration
-- OpenAI API integration for generating encouraging summaries
-- Witty, supportive tone matching the app's vibe
-- 7-day momentum log analysis
+- `backend/index.js` — functions implementation
+- `backend/config.example.js` — local template; copy to `backend/config.js`
+- `backend/test-functions.js` — basic integration checks
+- `firebase.json` — emulators, hosting, functions config
+- `firestore.rules`, `firestore.indexes.json` — security/indexes
 
-### 🔒 Security
-- Firestore security rules implemented
-- User authentication required for all operations
-- Users can only access their own data
+## Local run
 
-## 📁 Files Created/Updated
+Prereqs: Node 18, Firebase CLI
 
-### Backend Files
-- `backend/index.js` - Main Cloud Functions
-- `backend/package.json` - Dependencies and scripts
-- `backend/test-functions.js` - Test suite
-- `backend/config.example.js` - Configuration template
-
-### Firebase Configuration
-- `firebase.json` - Firebase project configuration
-- `firestore.rules` - Security rules
-- `firestore.indexes.json` - Database indexes
-- `.firebaserc` - Project settings
-
-### Frontend Integration
-- `frontend/src/firebase.js` - Firebase client configuration
-
-## 🚀 Next Steps
-
-### 1. Firebase Project Setup
+1) Install dependencies
 ```bash
-# Install Firebase CLI globally
-npm install -g firebase-tools
-
-# Login to Firebase
-firebase login
-
-# Create project (replace with your project name)
-firebase projects:create mindshift-app
-
-# Initialize Firebase
-firebase init
+npm --prefix backend install
 ```
 
-### 2. Environment Configuration
+2) Provide Gemini key (pick one)
 ```bash
-# Set OpenAI API key
-firebase functions:config:set openai.key="your-openai-api-key"
+# A) Local file (development only)
+cp backend/config.example.js backend/config.js
+# then edit backend/config.js and set GEMINI_API_KEY
 
-# Update frontend config in frontend/src/firebase.js
+# B) Firebase runtime config (recommended)
+firebase functions:config:set gemini.key="YOUR_GEMINI_API_KEY"
 ```
 
-### 3. Deploy to Firebase
+3) Start emulators (ports are in firebase.json)
 ```bash
-# Deploy functions
+firebase emulators:start --only functions,firestore,auth
+```
+
+## Deploy
+
+```bash
 firebase deploy --only functions
-
-# Deploy Firestore rules
 firebase deploy --only firestore:rules
 ```
 
-### 4. Test Locally
-```bash
-# Start emulators
-firebase emulators:start
+## Data examples
 
-# Run backend tests
-cd backend && npm test
-```
-
-## 🎯 Core Requirements Met
-
-### ✅ Pillar 1: The Compass
-- Data model for compass goals in Firestore
-- User profile creation on signup
-- Goals stored in `compassGoals` map field
-
-### ✅ Pillar 2: The Attention Swap
-- Backend ready to support mindful actions
-- Cloud functions can be extended for guided exercises
-
-### ✅ Pillar 3: The Momentum Log
-- Complete data model for momentum logs
-- Real-time Firestore integration ready
-- CRUD operations implemented in Cloud Functions
-
-### ✅ AI "Magic"
-- `generateMomentumSummary` function implemented
-- OpenAI integration with supportive prompts
-- 7-day log analysis and encouraging summaries
-
-## 🔧 Development Commands
-
-```bash
-# Start emulators
-firebase emulators:start
-
-# Deploy functions
-firebase deploy --only functions
-
-# View logs
-firebase functions:log
-
-# Test functions
-cd backend && npm test
-```
-
-## 📊 Data Structure
-
-### User Document
-```javascript
+User document
+```json
 {
-  email: "user@example.com",
-  createdAt: Timestamp,
-  compassGoals: {
-    goal1: "My first goal",
-    goal2: "My second goal", 
-    goal3: "My third goal"
-  }
+  "email": "user@example.com",
+  "createdAt": "<Timestamp>",
+  "compassGoals": { "goal1": "...", "goal2": "...", "goal3": "..." }
 }
 ```
 
-### Momentum Log Document
-```javascript
+Momentum log document
+```json
 {
-  text: "Finished reading a chapter.",
-  createdAt: Timestamp
+  "text": "Finished reading a chapter.",
+  "tags": ["reading"],
+  "linkedGoal": "goal1",
+  "createdAt": "<Timestamp>"
 }
 ```
 
-## 🎨 Frontend Integration
+## Security notes
 
-The backend is ready to integrate with the React frontend. The `frontend/src/firebase.js` file provides:
-- Firebase Auth for authentication
-- Firestore for real-time data
-- Cloud Functions for AI features
-- Emulator support for development
-
-## 🚨 Important Notes
-
-1. **Firebase Project**: You need to create a Firebase project and update the configuration
-2. **OpenAI API Key**: Required for the AI summary feature
-3. **Environment Variables**: Set up properly for production deployment
-4. **Security**: All data is properly secured with Firestore rules
-
-The backend is now fully configured and ready to support the MindShift app according to the README specifications! 🎉 
+- Callable functions require `context.auth`
+- Notion tokens are stored per-user and never exposed to other users
+- Keep Gemini keys out of the frontend

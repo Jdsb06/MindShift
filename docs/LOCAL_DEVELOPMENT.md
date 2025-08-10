@@ -18,7 +18,6 @@ firebase login
 firebase emulators:start --only functions,firestore,auth
 
 # Shell B: frontend
-yarn --version >/dev/null 2>&1 || true
 cd frontend
 npm run dev
 ```
@@ -29,7 +28,11 @@ npm run dev
 - Keep `GEMINI_API_KEY` set or use `functions:config` for AI calls.
 
 ## Testing changes
-- Click the in-app test button (if present) or run backend tests:
+- Frontend console harness:
+```js
+new window.MindShiftFunctionTester().runAllTests()
+```
+- Or run backend tests:
 ```bash
 cd backend
 npm test
