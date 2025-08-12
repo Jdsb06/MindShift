@@ -9,11 +9,9 @@ Trade mindless scrolling for meaningful progress. A modern, Gen Z–friendly pro
   <br/>
   <sub>Node 18</sub>
   <br/><br/>
-  <img src="frontend/public/images/mindshift-poster.jpg" alt="MindShift Poster" width="720" />
   <br/>
   <em>Design-first, shame-free, momentum-focused.</em>
   <br/><br/>
-  <a href="#demo">Skip to Demo ↓</a>
  </p>
 
 ## Table of contents
@@ -22,6 +20,8 @@ Trade mindless scrolling for meaningful progress. A modern, Gen Z–friendly pro
 - [Mission statement](#mission-statement)
 - [Key features](#key-features)
 - [Demo and screenshots](#demo-and-screenshots)
+ - [Demo and screenshots](#demo-and-screenshots)
+ 
 - [Tech stack](#tech-stack)
 - [Architecture (diagram)](#architecture-diagram)
 - [Repository structure (diagram)](#repository-structure-diagram)
@@ -62,29 +62,14 @@ Make intentional living effortless by turning attention into action and action i
 
 ## Demo and screenshots
 
-<p id="demo">
-  <a href="frontend/public/videos/mindshift-concept.mp4">
-    <img src="frontend/public/images/neural-network-bg.jpg" alt="Watch demo video" width="720" />
-  </a>
-  <br/>
-  <sub>Click the image to watch a short concept demo.</sub>
-</p>
+<a id="demo"></a>
 
-Additional visuals:
-
-<details>
-<summary>Hero loop (inline video)</summary>
-
-<video src="frontend/public/hero-loop.mp4" controls width="720">Your browser doesn’t support embedded videos. Watch the demo video above.</video>
-
-</details>
-
-<details>
-<summary>Compass view (screenshot)</summary>
-
-<img src="frontend/public/mock-compass.jpg" alt="Compass Goals Screenshot" width="720" />
-
-</details>
+|  |  |
+|---|---|
+| <img src="frontend/public/images/your-compass-main-page.png" alt="Compass main screen" width="100%"/> | <img src="frontend/public/images/momentum-log.png" alt="Momentum Log" width="100%"/> |
+| <img src="frontend/public/images/calender.png" alt="Calendar overlay" width="100%"/> | <img src="frontend/public/images/look-back.png" alt="Look Back reflection" width="100%"/> |
+| <img src="frontend/public/images/your-journy.png" alt="Your Journey overview" width="100%"/> | <img src="frontend/public/images/unwind-protocal-1.png" alt="Unwind protocol" width="100%"/> |
+| <img src="frontend/public/images/unwind-potocal-1.png" alt="Unwind protocol (alt)" width="100%"/> | <img src="frontend/public/images/unwind-protocal-2.png" alt="Unwind protocol (altt)" width="100%"/> |
 
 ## Tech stack
 
@@ -133,6 +118,8 @@ flowchart LR
 ```
 
 </details>
+
+ 
 
 ## Repository structure (diagram)
 
@@ -183,7 +170,7 @@ graph TD
 
 ## Quick start
 
-Prefer the full step-by-step? See [Getting Started Guide](./GETTING_STARTED.md).
+Prefer the full step-by-step? See GETTING_STARTED.md.
 
 ```bash
 # From the repo root
