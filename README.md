@@ -69,7 +69,7 @@ Make intentional living effortless by turning attention into action and action i
 | <img src="frontend/public/images/your-compass-main-page.png" alt="Compass main screen" width="100%"/> | <img src="frontend/public/images/momentum-log.png" alt="Momentum Log" width="100%"/> |
 | <img src="frontend/public/images/calender.png" alt="Calendar overlay" width="100%"/> | <img src="frontend/public/images/look-back.png" alt="Look Back reflection" width="100%"/> |
 | <img src="frontend/public/images/your-journy.png" alt="Your Journey overview" width="100%"/> | <img src="frontend/public/images/unwind-protocal-1.png" alt="Unwind protocol" width="100%"/> |
-| <img src="frontend/public/images/unwind-potocal-1.png" alt="Unwind protocol (alt)" width="100%"/> | <img src="frontend/public/images/unwind-protocal-2.png" alt="Unwind protocol (altt)" width="100%"/> |
+| <img src="frontend/public/images/unwind-potocal-1.png" alt="Unwind protocol (alt)" width="100%"/> | <img src="frontend/public/images/unwind-potocal-2.png" alt="Unwind protocol (altt)" width="100%"/> |
 
 ## Tech stack
 
